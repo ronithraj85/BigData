@@ -1,0 +1,58 @@
+--------------------------
+Creating table on CSVSerDe
+--------------------------
+CREATE TABLE csv_table(name string, location string)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES (
+    "separatorChar" = ",",
+    "quoteChar"     = "\"",
+    "escapeChar"    = "\\"
+)
+STORED AS TEXTFILE
+TBLPROPERTIES ("skip.header.line.count"="1");
+
+------------------------------------------------------------------
+Decoding the Create statement
+------------------------------------------------------------------
+-- ',' is the separator between fields
+-- ',' inside "" will not be considered as separator
+-- '\' will be the escape character
+-- first line of file will be skipped
+
+------------------------------------------------------------------
+Sample CSV File
+------------------------------------------------------------------
+
+vi csv_file.csv
+
+name,location
+Amit, "BLR,India"
+Sumit, "MUM,India"
+
+------------------------------------------------------------------
+Loading in the table
+------------------------------------------------------------------
+
+LOAD DATA LOCAL INPATH 'csv_file.csv' OVERWRITE INTO TABLE csv_table;
+
+------------------------------------------------------------------
+Querying the table
+------------------------------------------------------------------
+
+select * from csv_table;
++-----------------+---------------------+
+| csv_table.name  | csv_table.location  |
++-----------------+---------------------+
+| Amit            | BLR,India           |
+| Sumit           | MUM,India           |
++-----------------+---------------------+
+
+
+select location from csv_table;
++------------+
+|  location  |
++------------+
+| BLR,India  |
+| MUM,India  |
++------------+
+

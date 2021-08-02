@@ -1,0 +1,39 @@
+############# Use Hortonworks VM ########################################
+
+SET hive.mapred.mode=nostrict; --default is nostrict
+SELECT * FROM users ORDER BY name ASC;
+
+
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 7         | Chandra     | 500           | DNA         |
+| 5         | Kranti      | 100           | FCS         |
+| 6         | Mahoor      | 200           | FCS         |
+| 8         | Rajesh      | 700           | Gen         |
+| 2         | Sumit       | 200           | DNA         |
+| 4         | Sunil       | 500           | FCS         |
+| 3         | Yadav       | 300           | DNA         |
++-----------+-------------+---------------+-------------+
+
+
+SELECT * FROM users SORT BY name ASC;
+
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 5         | Kranti      | 100           | FCS         |
+| 8         | Rajesh      | 700           | Gen         |
+| 4         | Sunil       | 500           | FCS         |
+| 3         | Yadav       | 300           | DNA         |
+| 7         | Chandra     | 500           | DNA         |
+| 6         | Mahoor      | 200           | FCS         |
+| 2         | Sumit       | 200           | DNA         |
++-----------+-------------+---------------+-------------+
+
+The two queries look almost identical, but if more than one reducer is invoked,
+ the output will be sorted differently.
+
+

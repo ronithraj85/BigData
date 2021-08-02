@@ -1,0 +1,93 @@
+------------------------------------------------------------------------------------------------------------------------------
+Inner Join
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u INNER JOIN buck_locations l
+ON u.id = l.id order by u.id;
+
++-------+----------+-----------+---------+-------+--------------+
+| u.id  |  u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+----------+-----------+---------+-------+--------------+
+| 1     | Amit     | 100       | DNA     | 1     | UP           |
+| 2     | Sumit    | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav    | 300       | DNA     | 3     | MP           |
+| 4     | Sunil    | 500       | FCS     | 4     | AP           |
+| 5     | Kranti   | 100       | FCS     | 5     | MAHARASHTRA  |
+| 6     | Mahoor   | 200       | FCS     | 6     | GOA          |
+| 7     | Chandra  | 500       | DNA     | 7     | JHARKHAND    |
++-------+----------+-----------+---------+-------+--------------+
+
+
+------------------------------------------------------------------------------------------------------------------------------
+Left Outer Join
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u LEFT OUTER JOIN buck_locations l
+ON u.id = l.id order by u.id;
+
+
++-------+----------+-----------+---------+-------+--------------+
+| u.id  |  u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+----------+-----------+---------+-------+--------------+
+| 1     | Amit     | 100       | DNA     | 1     | UP           |
+| 2     | Sumit    | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav    | 300       | DNA     | 3     | MP           |
+| 4     | Sunil    | 500       | FCS     | 4     | AP           |
+| 5     | Kranti   | 100       | FCS     | 5     | MAHARASHTRA  |
+| 6     | Mahoor   | 200       | FCS     | 6     | GOA          |
+| 7     | Chandra  | 500       | DNA     | 7     | JHARKHAND    |
+| 8     | Rajesh   | 700       | Gen     | NULL  | NULL         |
++-------+----------+-----------+---------+-------+--------------+
+
+------------------------------------------------------------------------------------------------------------------------------
+Right Outer Join
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u RIGHT OUTER JOIN buck_locations l
+ON u.id = l.id order by u.id;
+
+
++-------+----------+-----------+---------+-------+--------------+
+| u.id  |  u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+----------+-----------+---------+-------+--------------+
+| NULL  | NULL     | NULL      | NULL    | 9     | HOME         |
+| 1     | Amit     | 100       | DNA     | 1     | UP           |
+| 2     | Sumit    | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav    | 300       | DNA     | 3     | MP           |
+| 4     | Sunil    | 500       | FCS     | 4     | AP           |
+| 5     | Kranti   | 100       | FCS     | 5     | MAHARASHTRA  |
+| 6     | Mahoor   | 200       | FCS     | 6     | GOA          |
+| 7     | Chandra  | 500       | DNA     | 7     | JHARKHAND    |
++-------+----------+-----------+---------+-------+--------------+
+
+
+------------------------------------------------------------------------------------------------------------------------------
+Full Outer Join
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u FULL OUTER JOIN buck_locations l
+ON u.id = l.id order by u.id;
+
++-------+----------+-----------+---------+-------+--------------+
+| u.id  |  u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+----------+-----------+---------+-------+--------------+
+| NULL  | NULL     | NULL      | NULL    | 9     | HOME         |
+| 1     | Amit     | 100       | DNA     | 1     | UP           |
+| 2     | Sumit    | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav    | 300       | DNA     | 3     | MP           |
+| 4     | Sunil    | 500       | FCS     | 4     | AP           |
+| 5     | Kranti   | 100       | FCS     | 5     | MAHARASHTRA  |
+| 6     | Mahoor   | 200       | FCS     | 6     | GOA          |
+| 7     | Chandra  | 500       | DNA     | 7     | JHARKHAND    |
+| 8     | Rajesh   | 700       | Gen     | NULL  | NULL         |
++-------+----------+-----------+---------+-------+--------------+
+------------------------------------------------------------------------------------------------------------------------------
+Cartesian Cross Product Join (Less Used)
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u JOIN buck_locations l
+ON u.id = l.id order by u.id;
+
+Cartesian products create a lot of data.
+Unlike other join types, Cartesian products are not executed in parallel, and they are not optimized in any way using MapReduce.
+When the property hive.mapred.mode is set to strict, Hive prevents users from inadvertently issuing a Cartesian product query.

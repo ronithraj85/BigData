@@ -1,0 +1,270 @@
+﻿CREATE DATABASE IF NOT EXISTS ineuron_db;
+
+
+set hive.cli.print.current.db=true;
+--set hive.exec.mode.local.auto=true;
+ 
+USE ineuron_db;
+
+SHOW DATABASES LIKE 'a.*';
+
+SHOW CREATE TABLE emp_details1;
+
+
+-- Show all databases starting from a alphabet
+
+	
+
+DROP DATABASE ineuron_db;
+
+CREATE DATABASE ineuron_db
+LOCATION '/user/ineuron/mydb';
+
+DESCRIBE DATABASE ineuron_db;
+
+set hive.cli.print.current.db=true;
+
+DROP DATABASE IF EXISTS ineuron_db;
+
+DROP DATABASE IF EXISTS ineuron_db CASCADE;
+
+=================================================
+CREATING TABLES
+---------------
+The CREATE TABLE statement follows SQL conventions, but Hive’s version offers significant 
+extensions to support a wide range of flexibility where the data files for tables are stored,
+ the formats used, etc.
+
+create table  emp_details2
+(
+emp_name int,
+unit string,
+exp int,
+location string
+)
+row format delimited
+fields terminated by ',';
+
+DESCRIBE emp_details1;
+DESCRIBE FORMATTED emp_details1;
+
+SHOW TABLES LIKE '*emp*';
+DROP TABLE IF EXISTS emp_details1;
+
+ALTERING TABLES
+---------------
+
+Renaming a Table
+ALTER TABLE emp_details1 RENAME TO employee_details;
+
+SHOW TABLES LIKE '*emp*';
+
+Changing Columns
+ALTER TABLE employee_details
+CHANGE COLUMN emp_name emppp_name STRING
+COMMENT 'Employee Name'
+AFTER unit;
+
+DESCRIBE FORMATTED emp_details;
+
+
+====================================
+
+CREATE VIEW emp_view1 AS SELECT emppp_name FROM employee_details limit 1;
+
+SELECT * FROM emp_view;
+
+
+====================================
+
+----------------------------------------------------------------------
+Loading From Local File System
+----------------------------------------------------------------------
+
+create table if not exists emp_details
+(
+emp_name string,
+unit string,
+exp int,
+location string
+)
+row format delimited
+fields terminated by ',';
+
+saurav,ops,10,blr
+
+LOAD DATA LOCAL INPATH '/home/sauravemail5795/emp_details_saurav.txt' INTO TABLE employee_details1;
+
+----------------------------------------------------------------------
+Loading From HDFS
+----------------------------------------------------------------------
+
+drop table emp_details;
+
+hadoop fs -mkdir -p /user/ineuron/hive
+
+hadoop fs -put /home/ineuron/hive/emp_details.txt /user/ineuron/hive
+
+create table emp_details
+(
+emp_name string,
+unit string,
+exp int,
+location string
+)
+row format delimited
+fields terminated by ',';
+
+LOAD DATA LOCAL INPATH '/home/sauravemail5795/emp_details_saurav.txt' INTO TABLE emp_details2;
+
+----------------------------------------------------------------------
+Writing to Local FileSystem
+----------------------------------------------------------------------
+
+INSERT OVERWRITE LOCAL DIRECTORY '/tmp/output'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '|'
+SELECT * FROM emp_details;
+
+
+==========================================
+
+SELECT * FROM emp_details2;
+
+SELECT emp_name FROM emp_details2;
+
+SELECT e.emp_name FROM emp_details e;
+
+SELECT * FROM emp_details2 WHERE exp >= 2;
+
+SELECT * FROM emp_details2 WHERE unit like "%op%";
+
+-----------------------------------------------------------------------------------------------
+Matching regular expressions
+Finding out details of employees whose name contains either 'mi' or 'ni'.
+-----------------------------------------------------------------------------------------------
+
+SELECT * FROM emp_details WHERE name RLIKE '.*(mi|ni).*';
+
+-----------------------------------------------------------------------------------------------
+Grouping on the basis of location
+-----------------------------------------------------------------------------------------------
+
+SELECT location, COUNT(*) FROM emp_details GROUP BY location;
+
+-----------------------------------------------------------------------------------------------
+Getting number of employees present in the locations where average experience of employees is
+greater than 1.5 years
+-----------------------------------------------------------------------------------------------
+
+SELECT location, COUNT(*) FROM emp_details
+GROUP BY location
+HAVING AVG(exp) > 1.5;
+
+-----------------------------------------------------------------------------------------------
+ORDER BY uses a single reducer
+-----------------------------------------------------------------------------------------------
+
+SELECT * FROM emp_details ORDER BY exp;
+
+SELECT * FROM emp_details ORDER BY exp DESC;
+
+
+=========================================
+--EXPLAIN command that shows the execution plan for a query. The syntax for this statement is as follows:
+--EXPLAIN [EXTENDED|DEPENDENCY|AUTHORIZATION] query
+
+EXPLAIN SELECT * FROM emp_details2;
+
+EXPLAIN SELECT location, COUNT(*) FROM ineuron_db.emp_details2 GROUP BY location;
+
+EXPLAIN SELECT * FROM emp_details WHERE exp >= 2;
+
+EXPLAIN SELECT location, COUNT(*) FROM emp_details
+GROUP BY location;
+
+
+=================================
+drop table emp_details;
+
+hadoop fs -mkdir -p /user/ineuron/hive
+
+hadoop fs -put /home/ineuron/hive/emp_details.txt /user/ineuron/hive
+
+create external table emp_details_ext
+(
+emp_name string,
+unit string,
+exp int,
+location string
+)
+row format delimited
+fields terminated by ','
+location '/user/sauravemail5795/hive/';
+
+SELECT * FROM emp_details;
+
+DROP TABLE emp_details;
+
+hadoop fs -ls /user/ineuron/hive
+
+=================================
+
+101	first:Amit,last:Mishra	bbsr,751024	Hadoop,Hive
+102	first:Aditya,last:Kulkarni	bnglr,123412	Hadoop,Hive,Oracle
+103	mid:Aditya,last:Kulkarni	bnglr,123412	Hadoop,Oracle
+
+Creating the table
+-------------------
+create external table complex_data_type_new
+(
+emp_id int,
+name map<string, string>,
+location struct<city:string, pin:int>,
+skill_set array<string>
+)
+row format delimited fields terminated by '\t'               
+collection items terminated by ','
+map keys terminated by ':'
+LOCATION '/user/sauravemail5795/hive/'
+tblproperties ("skip.header.line.count"="1"); 
+
+Sample data file
+-----------------
+emp_id	name	location	skill_set
+101	first:Amit,last:Mishra	bbsr,751024	Hadoop,Hive
+102	first:Aditya,last:Kulkarni	bnglr,123412	Hadoop,Hive,Oracle
+
+Loading data in the table
+--------------------------
+LOAD DATA LOCAL INPATH '/home/ineuron/hive/complex_data_type.txt'
+OVERWRITE INTO TABLE complex_data_type;
+
+Querying the table
+-------------------
+SELECT emp_id, name, location, skill_set FROM complex_data_type;
+SELECT emp_id, name['first'], location.city, skill_set[0] FROM complex_data_type;
+
+
+Using hive -e and hive -f
+--------------------------
+hive -e "SELECT * FROM climate_data LIMIT 3";
+
+Adding the -S for silent mode
+hive --define ROWS=10 -S -e "select * FROM climate_data LIMIT ${ROWS}" > /tmp/myquery
+cat /tmp/myquery
+
+Hive can execute one or more queries that were saved to a file using the -f file argument
+$ hive -f /path/to/file/with/queries.hql
+hive -f /home/ineuron/hive/firstQuery.hql
+hive --define ROWS=10 -f /home/ineuron/hive/firstQueryWithParameter.hql
+
+Working with .hiverc file
+--------------------------
+In $HOME/.hiverc file, one can specify a file of commands for the CLI to run as it starts, before showing you the prompt. Hive automatically looks for a file named .hiverc in your HOME directory and runs the commands it contains, if any.
+These files are convenient for commands that you run frequently, such as setting system properties (see “Variables and Properties” on page 31) or adding Java archives (JAR files) of custom Hive extensions to Hadoop’s distributed cache.
+
+set hive.cli.print.current.db=true;
+set hive.exec.mode.local.auto=true;
+
+

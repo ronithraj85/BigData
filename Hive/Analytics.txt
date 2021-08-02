@@ -1,0 +1,309 @@
+ -bash-4.1$ vi users.txt
+1	Amit	100	DNA
+2	Sumit	200	DNA
+3	Yadav	300	DNA
+4	Sunil	500	FCS
+5	Kranti	100	FCS
+6	Mahoor	200	FCS
+7	Rajesh	200	FCS
+
+-bash-4.1$ vi locations.txt
+1	UP
+2	BIHAR
+3	MP
+4	AP
+5	MAHARASHTRA
+6	GOA
+
+USE ineuron_db;
+
+CREATE TABLE users
+(
+id INT,
+name STRING,
+salary INT,
+unit STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+CREATE TABLE locations
+(
+id INT,
+location STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH 'users.txt' OVERWRITE
+INTO TABLE users;
+
+LOAD DATA LOCAL INPATH 'locations.txt'
+INTO TABLE locations;
+---------------------------------
+Get all records from users table.
+---------------------------------
+SELECT *FROM USERS;
+
+
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 2         | Sumit       | 200           | DNA         |
+| 3         | Yadav       | 300           | DNA         |
+| 4         | Sunil       | 500           | FCS         |
+| 5         | Kranti      | 100           | FCS         |
+| 6         | Mahoor      | 200           | FCS         |
+| 7         | Rajesh      | 200           | FCS         |
++-----------+-------------+---------------+-------------+
+
+-------------------------------------
+Get all records from locations table.
+-------------------------------------
+SELECT *FROM LOCATIONS;
+
++---------------+---------------------+
+| locations.id  | locations.location  |
++---------------+---------------------+
+| 1             | UP                  |
+| 2             | BIHAR               |
+| 3             | MP                  |
+| 4             | AP                  |
+| 5             | MAHARASHTRA         |
+| 6             | GOA                 |
+| NULL          | NULL                |
++---------------+---------------------+
+
+
+-------------------------------------------
+Getting maximum salary across all the units
+-------------------------------------------
+SELECT unit, MAX(salary) FROM users
+GROUP BY unit;
+
+DNA	300
+FCS	500
+
+-------------------------------------------
+Getting list of employees who have maximum salary across all the units
+-------------------------------------------
+--Not possible with GROUP BY
+
+SELECT id, name, salary, rank FROM
+(
+SELECT id, name, salary, rank() OVER (PARTITION BY unit ORDER BY salary DESC) AS rank
+FROM users
+) temp
+WHERE rank = 1;
+
++-----+--------+---------+-------+
+| id  |  name  | salary  | rank  |
++-----+--------+---------+-------+
+| 3   | Yadav  | 300     | 1     |
+| 4   | Sunil  | 500     | 1     |
++-----+--------+---------+-------+
+
+--------------------------
+RANK according to salary
+--------------------------
+
+--Skips intermediate numbers in case of a tie.
+
+SELECT rank() OVER (ORDER BY salary), id, name, salary, unit
+FROM users;
+
++----------------+-----+---------+---------+-------+
+| rank_window_0  | id  |  name   | salary  | unit  |
++----------------+-----+---------+---------+-------+
+| 1              | 1   | Amit    | 100     | DNA   |
+| 1              | 5   | Kranti  | 100     | FCS   |
+| 3              | 2   | Sumit   | 200     | DNA   |
+| 3              | 6   | Mahoor  | 200     | FCS   |
+| 3              | 7   | Rajesh  | 200     | FCS   |
+| 6              | 3   | Yadav   | 300     | DNA   |
+| 7              | 4   | Sunil   | 500     | FCS   |
++----------------+-----+---------+---------+-------+
+
+
+-------------------------------
+DENSE_RANK according to salary
+-------------------------------
+
+--Doesn't skip intermediate numbers in case of a tie.
+
+SELECT dense_rank() OVER (ORDER BY salary) as dense_rank, id, name, salary, unit
+FROM users;
+
++-------------+-----+---------+---------+-------+
+| dense_rank  | id  |  name   | salary  | unit  |
++-------------+-----+---------+---------+-------+
+| 1           | 1   | Amit    | 100     | DNA   |
+| 1           | 5   | Kranti  | 100     | FCS   |
+| 2           | 2   | Sumit   | 200     | DNA   |
+| 2           | 6   | Mahoor  | 200     | FCS   |
+| 2           | 7   | Rajesh  | 200     | FCS   |
+| 3           | 3   | Yadav   | 300     | DNA   |
+| 4           | 4   | Sunil   | 500     | FCS   |
++-------------+-----+---------+---------+-------+
+
+
+---------------------------------------------
+DENSE_RANK according to salary for every unit
+---------------------------------------------
+
+SELECT dense_rank() OVER (PARTITION BY unit ORDER BY salary DESC) AS rank, id, name, salary, unit
+FROM users;
+
++-------+-----+---------+---------+-------+
+| rank  | id  |  name   | salary  | unit  |
++-------+-----+---------+---------+-------+
+| 1     | 3   | Yadav   | 300     | DNA   |
+| 2     | 2   | Sumit   | 200     | DNA   |
+| 3     | 1   | Amit    | 100     | DNA   |
+| 1     | 4   | Sunil   | 500     | FCS   |
+| 2     | 6   | Mahoor  | 200     | FCS   |
+| 2     | 7   | Rajesh  | 200     | FCS   |
+| 3     | 5   | Kranti  | 100     | FCS   |
++-------+-----+---------+---------+-------+
+
+---------------------------------------------
+Top 2 highest paid employees for every unit
+---------------------------------------------
+
+SELECT name, salary, unit, rank 
+FROM
+(
+SELECT dense_rank() OVER (PARTITION BY unit ORDER BY salary DESC) AS rank, id, name, salary, unit
+FROM users
+) temp
+WHERE rank <= 2;
+
+
++---------+---------+-------+-------+
+|  name   | salary  | unit  | rank  |
++---------+---------+-------+-------+
+| Sunil   | 500     | FCS   | 1     |
+| Rajesh  | 200     | FCS   | 2     |
+| Mahoor  | 200     | FCS   | 2     |
+| Yadav   | 300     | DNA   | 1     |
+| Sumit   | 200     | DNA   | 2     |
++---------+---------+-------+-------+
+
+
+-----------------------------------------------------------------------------
+Getting current name and salary alongwith next higher salary in the same unit
+-----------------------------------------------------------------------------
+
+SELECT name, salary, unit,LEAD(salary) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
++---------+---------+----------------+
+|  name   | salary  | LEAD_window_0  |
++---------+---------+----------------+
+| Amit    | 100     | 200            |
+| Sumit   | 200     | 300            |
+| Yadav   | 300     | NULL           |
+| Kranti  | 100     | 200            |
+| Mahoor  | 200     | 200            |
+| Rajesh  | 200     | 500            |
+| Sunil   | 500     | NULL           |
++---------+---------+----------------+
+
+-------------------------------------------------------------------------------------
+Getting current name and salary alongwith next to next higher salary in the same unit
+-------------------------------------------------------------------------------------
+
+SELECT name, salary, LEAD(salary, 2) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
++---------+---------+----------------+
+|  name   | salary  | LEAD_window_0  |
++---------+---------+----------------+
+| Amit    | 100     | 300            |
+| Sumit   | 200     | NULL           |
+| Yadav   | 300     | NULL           |
+| Kranti  | 100     | 200            |
+| Mahoor  | 200     | 500            |
+| Rajesh  | 200     | NULL           |
+| Sunil   | 500     | NULL           |
++---------+---------+----------------+
+
+------------------------------------------------------------------------------------------------------------------
+Getting current name and salary alongwith next to next higher salary in the same unit replacing NULL with -1
+------------------------------------------------------------------------------------------------------------------
+
+SELECT name, salary, LEAD(salary, 2, -1) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
++---------+---------+----------------+
+|  name   | salary  | LEAD_window_0  |
++---------+---------+----------------+
+| Amit    | 100     | 300            |
+| Sumit   | 200     | -1	         |
+| Yadav   | 300     | -1	         |
+| Kranti  | 100     | 200            |
+| Mahoor  | 200     | 500            |
+| Rajesh  | 200     | -1	         |
+| Sunil   | 500     | -1           	 |
++---------+---------+----------------+
+
+-------------------------------------------------------------------------------------
+Getting current name and salary alongwith the closest lower salary
+-------------------------------------------------------------------------------------
+
+SELECT name,salary, LAG(salary) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
++---------+---------+---------------+
+|  name   | salary  | LAG_window_0  |
++---------+---------+---------------+
+| Amit    | 100     | NULL          |
+| Sumit   | 200     | 100           |
+| Yadav   | 300     | 200           |
+| Kranti  | 100     | NULL          |
+| Mahoor  | 200     | 100           |
+| Rajesh  | 200     | 200           |
+| Sunil   | 500     | 200           |
++---------+---------+---------------+
+
+-------------------------------------------------------------------------------------
+Getting current name and salary alongwith the closest lower salary
+-------------------------------------------------------------------------------------
+
+SELECT name,salary, LAG(salary,2) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
++---------+---------+---------------+
+|  name   | salary  | LAG_window_0  |
++---------+---------+---------------+
+| Amit    | 100     | NULL          |
+| Sumit   | 200     | NULL          |
+| Yadav   | 300     | 100           |
+| Kranti  | 100     | NULL          |
+| Mahoor  | 200     | NULL          |
+| Rajesh  | 200     | 100           |
+| Sunil   | 500     | 200           |
++---------+---------+---------------+
+
+------------------------------------------------------------------------------------------------------------------
+Getting current name and salary alongwith next to closest lower salary in the same unit replacing NULL with -1
+------------------------------------------------------------------------------------------------------------------
+
+SELECT name,salary, LAG(salary,2,-1) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
++---------+---------+---------------+
+|  name   | salary  | LAG_window_0  |
++---------+---------+---------------+
+| Amit    | 100     | -1            |
+| Sumit   | 200     | -1            |
+| Yadav   | 300     | 100           |
+| Kranti  | 100     | -1            |
+| Mahoor  | 200     | -1            |
+| Rajesh  | 200     | 100           |
+| Sunil   | 500     | 200           |
++---------+---------+---------------+
+
