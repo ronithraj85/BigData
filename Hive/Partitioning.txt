@@ -1,4 +1,4 @@
-############# Use AcadGild VM ########################################
+
 
 ----------------------------------------------------------------------
 CREATING emp_details TABLE
@@ -21,8 +21,6 @@ LOADING emp_details TABLE
 load data local inpath 'partition_data.csv' into table emp_details;
 
 describe formatted emp_details;
-
-dfs -ls hdfs://localhost:9000/user/hive/warehouse/emp_details;
 
 ----------------------------------------------------------------------
 CREATING emp_details_partitioned TABLE

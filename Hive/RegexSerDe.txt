@@ -15,7 +15,7 @@ CREATE TABLE userlog(
 
 
 -----------------------------
-DECODING the CREATE statement
+DECODING the CREATE statement 
 -----------------------------
 
  'input.regex' = '(.*)/(.*)@(.*)',

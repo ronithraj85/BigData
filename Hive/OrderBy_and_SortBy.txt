@@ -1,4 +1,5 @@
-############# Use Hortonworks VM ########################################
+
+
 
 SET hive.mapred.mode=nostrict; --default is nostrict
 SELECT * FROM users ORDER BY name ASC;
